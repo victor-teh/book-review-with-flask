@@ -46,7 +46,7 @@ def signup():
 
         if len(username)<0 and len(password)<0 and len(name)<0:
             return render_template("signup.html", message="Enter all required fields")
-        elif db.execute("SELECT username from users where username=:username", {"username": username}).rowcount != 0 :
+        elif db.execute("SELECT username from users WHERE username=:username", {"username": username}).rowcount != 0 :
             return render_template("signup.html", message="Username taken")
         else:
             # hashing password with bcrypt hashing
@@ -65,11 +65,22 @@ def login():
         # get username password from form
         username = request.form.get("username").strip()
         password = request.form.get("password").strip()
-        
+        print(password)
+        # check if username exist
+        if db.execute("SELECT username from users WHERE username=:username",{"username": username}).rowcount == 0:
+            message = "Invalid username or password"
+            return render_template("login.html", message=message)
+        else :
+            # # hash password to compared to database
 
-        pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        bcrypt.check_password_hash(pw_hash, password).decode('utf-8')
-        return render_template("login.html")
+            db_password = db.execute("SELECT password from users WHERE username=:username", {"username": username}).fetchone()['password']
+            if bcrypt.check_password_hash(db_password, password):
+                message = "Login Successfully!"
+                return render_template("login.html", message=message)
+            else:
+                message = "Invalid username or password"
+                return render_template("login.html", message=message)
+
 
 @app.route("/logout")
 def logout():
