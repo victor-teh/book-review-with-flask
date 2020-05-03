@@ -22,45 +22,13 @@ Session(app)
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    if session.get("login") is None:
+        session["login"] = False
 
-@app.route("/home")
-def home():
-    return render_template("home.html")
-
-@app.route("/search")
-def search():
-    return render_template("search.html")
-
-@app.route("/signup", methods=["GET", "POST"])
-def signup():
     if request.method == 'GET':
-        return render_template("signup.html")
-    else:
-        # get username password and name from form
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
-        name = request.form.get("name").strip()
-
-        if len(username)<0 and len(password)<0 and len(name)<0:
-            return render_template("signup.html", message="Enter all required fields")
-        elif db.execute("SELECT username from users WHERE username=:username", {"username": username}).rowcount != 0 :
-            return render_template("signup.html", message="Username taken")
-        else:
-            # hashing password with bcrypt hashing
-            pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-            db.execute("INSERT INTO users (username, password, name) VALUES (:username, :password, :name)", {"username": username, "password": pw_hash, "name": name})
-            db.commit()
-            
-            message = "Registered successfully!"
-        return render_template("login.html", message=message)
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == 'GET':
-        return render_template("login.html")
+        return render_template("index.html", login=session["login"])
     else:
         # get username password from form
         username = request.form.get("username").strip()
@@ -69,22 +37,53 @@ def login():
         # check if username exist
         if db.execute("SELECT username from users WHERE username=:username",{"username": username}).rowcount == 0:
             message = "Invalid username or password"
-            return render_template("login.html", message=message)
+            session["login"] = False
+            return render_template("index.html", message=message, login=session["login"])
         else :
-            # # hash password to compared to database
-
+            # compare pw with pwhash in db
             db_password = db.execute("SELECT password from users WHERE username=:username", {"username": username}).fetchone()['password']
             if bcrypt.check_password_hash(db_password, password):
-                message = "Login Successfully!"
-                return render_template("login.html", message=message)
+                message = "Log In Successfully!"
+                session["login"] = True
+                return render_template("index.html", message=message, login=session["login"])
             else:
                 message = "Invalid username or password"
-                return render_template("login.html", message=message)
-
-
+                session["login"] = False
+                return render_template("index.html", message=message, login=session["login"])
 @app.route("/logout")
 def logout():
-    return render_template("logout.html")
+    session["login"] = False
+    message = "Successfully Logout"
+    return render_template("index.html", message=message, login=session["login"])
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == 'GET':
+        return render_template("register.html")
+    else:
+        # get username password and name from form
+        username = request.form.get("username").strip()
+        password = request.form.get("password").strip()
+        name = request.form.get("name").strip()
+
+        if len(username)<0 and len(password)<0 and len(name)<0:
+            return render_template("register.html", message="Enter all required fields")
+        elif db.execute("SELECT username from users WHERE username=:username", {"username": username}).rowcount != 0 :
+            return render_template("register.html", message="Username taken")
+        else:
+            # hashing password with bcrypt hashing
+            pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+            db.execute("INSERT INTO users (username, password, name) VALUES (:username, :password, :name)", {"username": username, "password": pw_hash, "name": name})
+            db.commit()
+            
+            message = "Registered successfully!"
+        return render_template("index.html", message=message)
+
+@app.route("/search")
+def search():
+    return render_template("search.html")
+
+
 
 
 # @app.route("/<string:name>")

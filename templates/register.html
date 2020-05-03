@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    <form class="form-signin" action="{{ url_for('signup') }}" method="POST">
+    <form class="form-signin" action="{{ url_for('register') }}" method="POST">
         <!-- <img class="mb-4" src="" alt="" width="72" height="72"> -->
         <h1 class="h3 mb-3 font-weight-normal">Please sign up</h1>
         <h1 class="h3 mb-3 font-weight-normal">{{ message }}</h1>
@@ -18,13 +18,8 @@
 
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
     </form>
-    <a href="{{url_for('login')}}">
+    <a href="{{url_for('index')}}">
         <button class="btn btn-lg btn-primary btn-block mt-5" type="submit">Back</button>
     </a>
-  
-    <script>
-        $(document).ready(function(){
-            $("#login").addClass("active");
-        });
-    </script>
+    
 {% endblock %}
