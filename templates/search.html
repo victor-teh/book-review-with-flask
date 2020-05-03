@@ -1,10 +1,17 @@
 {% extends "layout.html" %}
 
 {% block heading %}
-    Search page
+Let's Search!
 {% endblock %}
 
 {% block body %}
-    <p class="text-center">search</p>
+<p class="p mb-3 font-weight-normal text-center">Searches are not case-sensitive. You may enter all lowercase for title
+    or author.</p>
+<form class="form-signin" action="{{ url_for('search') }}" method="POST">
+    <label for="inputSearch">Search for</label>
+    <input type="text" id="inputUsername" name="search" class="form-control mb-2" placeholder="ISBN, Title or Author"
+        required autofocus>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Search</button>
+</form>
 
 {% endblock %}

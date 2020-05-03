@@ -1,24 +1,27 @@
 {% extends "layout.html" %}
 
 {% block heading %}
-    Welcome to Book Review
+Welcome to Book Review
 {% endblock %}
 
 {% block body %}
-<p class="p mb-3 font-weight-normal text-center">You can search our database of 5,000 books, read reviews by readers like you, and add your own reviews.</p>
-<p class="p mb-3 font-weight-normal text-center">To get started, log in or <a href="{{url_for('register')}}">register</a></p>
+<p class="p mb-3 font-weight-normal text-center">You can search our database of 5,000 books, read reviews by readers
+    like you, and add your own reviews.</p>
+<p class="p mb-3 font-weight-normal text-center">To get started, log in or <a
+        href="{{url_for('register')}}">register</a></p>
 <form class="form-signin" action="{{ url_for('index') }}" method="POST">
-        <label for="inputUsername">Username</label>
-        <input type="username" id="inputUsername" name="username" class="form-control" placeholder="Username" required autofocus>
-        <label for="inputPassword">Password</label>
-        <input type="password" id="inputPassword" name="password" class="form-control mb-2" placeholder="Password" required>
+    <label for="inputUsername">Username</label>
+    <input type="username" id="inputUsername" name="username" class="form-control" placeholder="Username" required
+        autofocus>
+    <label for="inputPassword">Password</label>
+    <input type="password" id="inputPassword" name="password" class="form-control mb-2" placeholder="Password" required>
 
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-    </form>
-  
-    <script>
-        $(document).ready(function(){
-            $("#index").addClass("active");
-        });
-    </script>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+</form>
+
+<script>
+    $(document).ready(function () {
+        $("#index").addClass("active");
+    });
+</script>
 {% endblock %}
