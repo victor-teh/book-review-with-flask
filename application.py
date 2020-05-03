@@ -24,34 +24,43 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    if session.get("login") is None:
-        session["login"] = False
-
+    
     if request.method == 'GET':
-        return render_template("index.html", login=session["login"])
+        if session.get("user_name") is None:
+            session["login"] = False
+            return render_template("index.html", login=session["login"])
+        else: 
+            user_name = session["user_name"]
+            return render_template("index.html", user_name=user_name, login=session["login"])
+ 
     else:
+        # clear session if they submit a post request directly, be sure to log them out first
+        session.clear()
+        session["login"] = False
+        
         # get username password from form
         username = request.form.get("username").strip()
         password = request.form.get("password").strip()
-        print(password)
+
         # check if username exist
         if db.execute("SELECT username from users WHERE username=:username",{"username": username}).rowcount == 0:
             message = "Invalid username or password"
-            session["login"] = False
             return render_template("index.html", message=message, login=session["login"])
         else :
             # compare pw with pwhash in db
-            db_password = db.execute("SELECT password from users WHERE username=:username", {"username": username}).fetchone()['password']
+            user = db.execute("SELECT * from users WHERE username=:username", {"username": username}).fetchone()
+            db_password = user["password"]
             if bcrypt.check_password_hash(db_password, password):
-                message = "Log In Successfully!"
                 session["login"] = True
-                return render_template("index.html", message=message, login=session["login"])
+                session["user_name"] = user["name"]
+                message = "Log In Successfully!"
+                return render_template("index.html", message=message, user_name=session["user_name"], login=session["login"])
             else:
                 message = "Invalid username or password"
-                session["login"] = False
                 return render_template("index.html", message=message, login=session["login"])
 @app.route("/logout")
 def logout():
+    session.clear()
     session["login"] = False
     message = "Successfully Logout"
     return render_template("index.html", message=message, login=session["login"])
@@ -61,6 +70,9 @@ def register():
     if request.method == 'GET':
         return render_template("register.html")
     else:
+        session.clear()
+        session["login"] = False
+
         # get username password and name from form
         username = request.form.get("username").strip()
         password = request.form.get("password").strip()
@@ -77,7 +89,7 @@ def register():
             db.commit()
             
             message = "Registered successfully!"
-        return render_template("index.html", message=message)
+        return render_template("index.html", message=message, login=session["login"])
 
 @app.route("/search")
 def search():
