@@ -23,8 +23,7 @@ engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/", methods=["GET", "POST"])
-def index():
-    
+def index():  
     if request.method == 'GET':
         if session.get("user_name") is None:
             session["login"] = False
@@ -45,7 +44,7 @@ def index():
         # check if username exist
         if db.execute("SELECT username from users WHERE username=:username",{"username": username}).rowcount == 0:
             message = "Invalid username or password"
-            return render_template("index.html", message=message, login=session["login"])
+            return render_template("index.html", danger_message=message, login=session["login"])
         else :
             # compare pw with pwhash in db
             user = db.execute("SELECT * from users WHERE username=:username", {"username": username}).fetchone()
@@ -53,17 +52,42 @@ def index():
             if bcrypt.check_password_hash(db_password, password):
                 session["login"] = True
                 session["user_name"] = user["name"]
-                message = "Log In Successfully!"
-                return render_template("index.html", message=message, user_name=session["user_name"], login=session["login"])
+                return render_template("search.html", user_name=session["user_name"], login=session["login"])
             else:
                 message = "Invalid username or password"
-                return render_template("index.html", message=message, login=session["login"])
-@app.route("/logout")
+                return render_template("index.html", dander_message=message, login=session["login"])
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
-    session.clear()
-    session["login"] = False
-    message = "Successfully Logout"
-    return render_template("index.html", message=message, login=session["login"])
+    if request.method == 'GET':
+        session.clear()
+        session["login"] = False
+        message = "Successfully Logout"
+        return render_template("index.html", success_message=message, login=session["login"])
+ 
+    else:
+        # clear session if they submit a post request directly, be sure to log them out first
+        session.clear()
+        session["login"] = False
+        
+        # get username password from form
+        username = request.form.get("username").strip()
+        password = request.form.get("password").strip()
+
+        # check if username exist
+        if db.execute("SELECT username from users WHERE username=:username",{"username": username}).rowcount == 0:
+            message = "Invalid username or password"
+            return render_template("index.html", danger_message=message, login=session["login"])
+        else :
+            # compare pw with pwhash in db
+            user = db.execute("SELECT * from users WHERE username=:username", {"username": username}).fetchone()
+            db_password = user["password"]
+            if bcrypt.check_password_hash(db_password, password):
+                session["login"] = True
+                session["user_name"] = user["name"]
+                return render_template("search.html", user_name=session["user_name"], login=session["login"])
+            else:
+                message = "Invalid username or password"
+                return render_template("index.html", dander_message=message, login=session["login"])
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -79,9 +103,9 @@ def register():
         name = request.form.get("name").strip()
 
         if len(username)<0 and len(password)<0 and len(name)<0:
-            return render_template("register.html", message="Enter all required fields")
+            return render_template("register.html", warning_message="Enter all required fields")
         elif db.execute("SELECT username from users WHERE username=:username", {"username": username}).rowcount != 0 :
-            return render_template("register.html", message="Username taken")
+            return render_template("register.html", warning_message="Username taken")
         else:
             # hashing password with bcrypt hashing
             pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -89,7 +113,7 @@ def register():
             db.commit()
             
             message = "Registered successfully!"
-        return render_template("index.html", message=message, login=session["login"])
+        return render_template("index.html", success_message=message, login=session["login"])
 
 @app.route("/search")
 def search():

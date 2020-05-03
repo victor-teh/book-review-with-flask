@@ -17,7 +17,7 @@ db = scoped_session(sessionmaker(bind=engine))
 # engine.execute("CREATE TABLE reviews ( id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users, book_id INTEGER REFERENCES books, review VARCHAR NOT NULL, rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5))")
 
 def main():
-    f = open("booksShort.csv")
+    f = open("books.csv")
     books = csv.reader(f)
     for isbn, title, author, year in books:
         db.execute("INSERT INTO books (isbn, title, author, year) VALUES (:isbn, :title, :author, :year)",

@@ -8,7 +8,7 @@
     <form class="form-signin" action="{{ url_for('register') }}" method="POST">
         <!-- <img class="mb-4" src="" alt="" width="72" height="72"> -->
         <h1 class="h3 mb-3 font-weight-normal">Please sign up</h1>
-        <h1 class="h3 mb-3 font-weight-normal">{{ message }}</h1>
+        <!-- <h1 class="h3 mb-3 font-weight-normal">{{ message }}</h1> -->
         <label for="inputName">Full Name</label>
         <input type="text" id="inputName" name="name" class="form-control" placeholder="Full name" required autofocus>
         <label for="inputUsername">Username</label>
@@ -18,8 +18,6 @@
 
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
     </form>
-    <a href="{{url_for('index')}}">
-        <button class="btn btn-lg btn-primary btn-block mt-5" type="submit">Back</button>
-    </a>
-    
+    <p class="p mb-3 font-weight-normal text-center"><a href="{{url_for('index')}}">Log in to existing account</a></p>
+
 {% endblock %}
