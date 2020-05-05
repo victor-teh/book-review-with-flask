@@ -31,7 +31,7 @@ def index():
             return render_template("index.html", login=session["login"])
         else:
             user_name = session["user_name"]
-            return render_template("index.html", user_name=user_name, login=session["login"])
+            return render_template("search.html", user_name=user_name, login=session["login"])
 
     else:
         # clear session if they submit a post request directly, be sure to log them out first
@@ -123,12 +123,24 @@ def register():
         return render_template("index.html", success_message=message, login=session["login"])
 
 
-@app.route("/search")
+@app.route("/search", methods=["GET", "POST"])
 def search():
-    return render_template("search.html")
+    if request.method == 'GET':
+        return render_template("search.html")
+    else:
+        search = "%" + request.form.get("search").lower() + "%"
+        results = db.execute(
+            "SELECT * FROM books WHERE lower(title) LIKE :search OR lower(author) LIKE :search OR lower(isbn) LIKE :search", {"search": search}).fetchall()
+        if results is None:
+            return render_template("search.html", danger_message="No such book.")
+        else:
+            return render_template("search.html", results=results, danger_message="No such book.")
 
+@app.route("/books/<int:book_id>")
+def book(book_id):
+    # Lists details about a single book.
 
-# @app.route("/<string:name>")
-# def hello(name):
-#     return f"Hello,{name}"
+    # Make sure book exists.
+    book = db.execute("SELECT * FROM books WHERE id = :id", {"id": book_id}).fetchone()
 
+    return render_template("book.html", book=book)

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+Welcome to Book Review
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1>Book Details</h1>
+    <ul>
+        <li>ISBN: {{ book.isbn }}</li>
+        <li>Title: {{ book.title }}</li>
+        <li>Author: {{ book.author}} minutes</li>
+        <li>Year: {{ book.year}} minutes</li>
+    </ul>
+</div>
+{% endblock %}
