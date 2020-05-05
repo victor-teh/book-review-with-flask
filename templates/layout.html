@@ -41,6 +41,9 @@
                         <span class="nav-link text-white">Welcome {{ session["user_name"] }}</span>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" id="search" href="{{url_for('search')}}">Search</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" id="logout" href="{{url_for('logout')}}">Logout</a>
                     </li>
                 </ul>

@@ -109,10 +109,10 @@ def register():
         name = request.form.get("name").strip()
 
         if len(username) <= 0 and len(password) <= 0 and len(name) <= 0:
-            message="Enter all required fields"
+            message = "Enter all required fields"
             return render_template("register.html", warning_message=message)
         elif db.execute("SELECT username from users WHERE username=:username", {"username": username}).rowcount != 0:
-            message="Username taken"
+            message = "Username taken"
             return render_template("register.html", warning_message=message)
         else:
             # hashing password with bcrypt hashing
@@ -135,8 +135,8 @@ def search():
             "SELECT * FROM books WHERE lower(title) LIKE :search OR lower(author) LIKE :search OR lower(isbn) LIKE :search", {"search": search}).fetchall()
 
         if db.execute(
-            "SELECT * FROM books WHERE lower(title) LIKE :search OR lower(author) LIKE :search OR lower(isbn) LIKE :search", {"search": search}).rowcount==0:
-            message="No such book."
+                "SELECT * FROM books WHERE lower(title) LIKE :search OR lower(author) LIKE :search OR lower(isbn) LIKE :search", {"search": search}).rowcount == 0:
+            message = "No such book."
             return render_template("search.html", danger_message=message, login=session["login"])
         else:
             return render_template("search.html", results=results, login=session["login"])
@@ -155,17 +155,23 @@ def book(book_id):
     if request.method == 'GET':
         return render_template("book.html", book=book, reviews=reviews, login=session["login"])
     else:
-        rating = -1
-        # get rating and review from form
-        rating = int(request.form.get("rating"))
-        review = request.form.get("review").strip()
-
-        if rating < 0 or len(review) <= 0:
-            message = "Invalid Review. Please rate and write a review before submit."
+        if db.execute("SELECT user_id from reviews WHERE user_id=:user_id AND book_id=:book_id", {"user_id":  session["user_id"], "book_id": book_id}).rowcount != 0:
+            message = "You have already written a review for this book."
             return render_template("book.html", book=book, danger_message=message, reviews=reviews, login=session["login"])
         else:
-            db.execute("INSERT INTO reviews (user_id, book_id, review, rating) VALUES (:user_id, :book_id, :review, :rating)", {
-                       "user_id": session["user_id"], "book_id": book_id, "review": review, "rating": rating})
-            db.commit()
-            message = "Review submitted successfully!"
-            return render_template("book.html", book=book, success_message=message, reviews=reviews, login=session["login"])
+            rating = -1
+            # get rating and review from form
+            rating = int(request.form.get("rating"))
+            review = request.form.get("review").strip()
+
+            if rating < 0 or len(review) <= 0:
+                message = "Invalid Review. Please rate and write a review before submit."
+                return render_template("book.html", book=book, danger_message=message, reviews=reviews, login=session["login"])
+            else:
+                db.execute("INSERT INTO reviews (user_id, book_id, review, rating) VALUES (:user_id, :book_id, :review, :rating)", {
+                    "user_id": session["user_id"], "book_id": book_id, "review": review, "rating": rating})
+                db.commit()
+                reviews = db.execute("SELECT users.name, reviews.review, reviews.rating FROM reviews INNER JOIN users ON users.id = reviews.user_id WHERE reviews.book_id=:book_id ", {
+                                     "book_id": book_id}).fetchall()
+                message = "Review submitted successfully!"
+                return render_template("book.html", book=book, success_message=message, reviews=reviews, login=session["login"])
