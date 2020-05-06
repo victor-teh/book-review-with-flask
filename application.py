@@ -1,4 +1,5 @@
 import os
+import requests
 
 from flask import Flask, session, render_template, request
 from flask_session import Session
@@ -8,7 +9,7 @@ from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-
+goodread_key = "6KBtRGHGwQlscd6rK7DDA"
 # Check for environment variable
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
@@ -144,20 +145,29 @@ def search():
 
 @app.route("/books/<int:book_id>", methods=["GET", "POST"])
 def book(book_id):
+
     # Lists details about a single book.
-    # Make sure book exists.
     book = db.execute("SELECT * FROM books WHERE id = :id",
                       {"id": book_id}).fetchone()
 
+    # retrieve review from database
     reviews = db.execute("SELECT users.name, reviews.review, reviews.rating FROM reviews INNER JOIN users ON users.id = reviews.user_id WHERE reviews.book_id=:book_id ", {
                          "book_id": book_id}).fetchall()
 
-    if request.method == 'GET':
-        return render_template("book.html", book=book, reviews=reviews, login=session["login"])
+    # retrieve Goodreads Review Data
+    res = requests.get("https://www.goodreads.com/book/review_counts.json",
+                       params={"key": goodread_key, "isbns": book.isbn})
+    if res.status_code != 404:
+        goodread_review = res.json()["books"][0]
     else:
+        goodread_review = ""
+    if request.method == 'GET':
+        return render_template("book.html", book=book, reviews=reviews, goodread_review=goodread_review, login=session["login"])
+    else:
+        # Make sure book exists.
         if db.execute("SELECT user_id from reviews WHERE user_id=:user_id AND book_id=:book_id", {"user_id":  session["user_id"], "book_id": book_id}).rowcount != 0:
             message = "You have already written a review for this book."
-            return render_template("book.html", book=book, danger_message=message, reviews=reviews, login=session["login"])
+            return render_template("book.html", book=book, danger_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
         else:
             rating = -1
             # get rating and review from form
@@ -166,7 +176,7 @@ def book(book_id):
 
             if rating < 0 or len(review) <= 0:
                 message = "Invalid Review. Please rate and write a review before submit."
-                return render_template("book.html", book=book, danger_message=message, reviews=reviews, login=session["login"])
+                return render_template("book.html", book=book, danger_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
             else:
                 db.execute("INSERT INTO reviews (user_id, book_id, review, rating) VALUES (:user_id, :book_id, :review, :rating)", {
                     "user_id": session["user_id"], "book_id": book_id, "review": review, "rating": rating})
@@ -174,4 +184,9 @@ def book(book_id):
                 reviews = db.execute("SELECT users.name, reviews.review, reviews.rating FROM reviews INNER JOIN users ON users.id = reviews.user_id WHERE reviews.book_id=:book_id ", {
                                      "book_id": book_id}).fetchall()
                 message = "Review submitted successfully!"
-                return render_template("book.html", book=book, success_message=message, reviews=reviews, login=session["login"])
+                return render_template("book.html", book=book, success_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
+
+# @app.route("/api/<int:isbn>")
+# def api(isbn):
+
+#     return render_template("api.html")

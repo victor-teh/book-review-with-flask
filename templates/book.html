@@ -18,22 +18,25 @@ Welcome to Book Review
     <h4 class="mb-n2 mt-">Write a review</h4>
     <form action="{{ url_for('book', book_id=book.id)}}" method="POST">
         <div class="form-group">
-            <div class="rating"> 
-                <input type="radio" name="rating" value="5" id="5"><label for="5">☆</label> 
-                <input type="radio" name="rating" value="4" id="4"><label for="4">☆</label> 
-                <input type="radio" name="rating" value="3" id="3" checked="checked"><label for="3">☆</label> 
-                <input type="radio" name="rating" value="2" id="2"><label for="2">☆</label> 
+            <div class="rating">
+                <input type="radio" name="rating" value="5" id="5"><label for="5">☆</label>
+                <input type="radio" name="rating" value="4" id="4"><label for="4">☆</label>
+                <input type="radio" name="rating" value="3" id="3" checked="checked"><label for="3">☆</label>
+                <input type="radio" name="rating" value="2" id="2"><label for="2">☆</label>
                 <input type="radio" name="rating" value="1" id="1"><label for="1">☆</label>
             </div>
-            <textarea class="form-control" name="review" rows="3"
-                placeholder="Enter your review here..."></textarea>
+            <textarea class="form-control" name="review" rows="3" placeholder="Enter your review here..."></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
-{% if reviews %}
 <div class="container mt-3 mb-10">
     <h4>Reviews</h4>
+    {% if goodread_review!="" %}
+    <p>Average rating on Goodreads is {{goodread_review.average_rating}} based on
+        ({{goodread_review.work_ratings_count}} ratings)</p>
+    {% endif %}
+    {% if reviews %}
     <table class="table table-hover">
         <thead class="thead-light">
             <tr>
@@ -54,7 +57,7 @@ Welcome to Book Review
             {% endfor %}
         </tbody>
     </table>
+    {% endif %}
 </div>
 <div style="height: 30px;"></div>
-{% endif %}
 {% endblock %}
