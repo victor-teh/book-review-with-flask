@@ -1,7 +1,7 @@
 import os
 import requests
 
-from flask import Flask, session, render_template, request
+from flask import Flask, session, render_template, request, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -186,7 +186,20 @@ def book(book_id):
                 message = "Review submitted successfully!"
                 return render_template("book.html", book=book, success_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
 
-# @app.route("/api/<int:isbn>")
-# def api(isbn):
 
-#     return render_template("api.html")
+@app.route("/api/<isbn>")
+def api(isbn):
+    # Lists details about a single book.
+    book = db.execute("SELECT title, author, year, isbn FROM books WHERE isbn = :isbn",
+                      {"isbn": isbn}).fetchone()
+    if book is None:
+        return render_template("404.html")
+    review = db.execute("SELECT COUNT(reviews.review) AS review_count, AVG(reviews.rating) AS average_score FROM books INNER JOIN reviews ON books.id = reviews.book_id WHERE books.isbn=:isbn",
+                        {"isbn": isbn}).fetchone()
+
+    keys = ("title", "author", "year", "isbn", "review_count", "average_score")
+    value = list(book)
+    value.append(review.review_count)
+    value.append(round(float(review.average_score), 2))
+
+    return jsonify(dict(zip(keys, value)))
