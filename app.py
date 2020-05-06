@@ -164,27 +164,31 @@ def book(book_id):
     if request.method == 'GET':
         return render_template("book.html", book=book, reviews=reviews, goodread_review=goodread_review, login=session["login"])
     else:
-        # Make sure book exists.
-        if db.execute("SELECT user_id from reviews WHERE user_id=:user_id AND book_id=:book_id", {"user_id":  session["user_id"], "book_id": book_id}).rowcount != 0:
-            message = "You have already written a review for this book."
-            return render_template("book.html", book=book, danger_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
+        if session["login"] == False:
+            message = "You must login to leave a review."
+            return render_template("book.html", book=book, reviews=reviews, goodread_review=goodread_review, login=session["login"], danger_message=message)
         else:
-            rating = -1
-            # get rating and review from form
-            rating = int(request.form.get("rating"))
-            review = request.form.get("review").strip()
-
-            if rating < 0 or len(review) <= 0:
-                message = "Invalid Review. Please rate and write a review before submit."
+            # Make sure book exists.
+            if db.execute("SELECT user_id from reviews WHERE user_id=:user_id AND book_id=:book_id", {"user_id":  session["user_id"], "book_id": book_id}).rowcount != 0:
+                message = "You have already written a review for this book."
                 return render_template("book.html", book=book, danger_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
             else:
-                db.execute("INSERT INTO reviews (user_id, book_id, review, rating) VALUES (:user_id, :book_id, :review, :rating)", {
-                    "user_id": session["user_id"], "book_id": book_id, "review": review, "rating": rating})
-                db.commit()
-                reviews = db.execute("SELECT users.name, reviews.review, reviews.rating FROM reviews INNER JOIN users ON users.id = reviews.user_id WHERE reviews.book_id=:book_id ", {
-                                     "book_id": book_id}).fetchall()
-                message = "Review submitted successfully!"
-                return render_template("book.html", book=book, success_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
+                rating = -1
+                # get rating and review from form
+                rating = int(request.form.get("rating"))
+                review = request.form.get("review").strip()
+
+                if rating < 0 or len(review) <= 0:
+                    message = "Invalid Review. Please rate and write a review before submit."
+                    return render_template("book.html", book=book, danger_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
+                else:
+                    db.execute("INSERT INTO reviews (user_id, book_id, review, rating) VALUES (:user_id, :book_id, :review, :rating)", {
+                        "user_id": session["user_id"], "book_id": book_id, "review": review, "rating": rating})
+                    db.commit()
+                    reviews = db.execute("SELECT users.name, reviews.review, reviews.rating FROM reviews INNER JOIN users ON users.id = reviews.user_id WHERE reviews.book_id=:book_id ", {
+                        "book_id": book_id}).fetchall()
+                    message = "Review submitted successfully!"
+                    return render_template("book.html", book=book, success_message=message, reviews=reviews, goodread_review=goodread_review, login=session["login"])
 
 
 @app.route("/api/<isbn>")
