@@ -2,7 +2,7 @@
 Web Programming with Python and JavaScript
 Check it out here - https://book-review-with-flask.herokuapp.com/
 
-## Project 1
+## Requirements
 
 - [x] Registration: Users should be able to register for your website, providing (at minimum) a username and password.
 - [x] Login: Users, once registered, should be able to log in to your website with their username and password.
